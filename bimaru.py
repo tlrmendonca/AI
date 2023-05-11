@@ -7,6 +7,11 @@
 # 00000 Nome2
 
 import sys
+from sys import (
+    stdin
+)
+from enum import Enum
+
 from search import (
     Problem,
     Node,
@@ -17,6 +22,28 @@ from search import (
     recursive_best_first_search,
 )
 
+class TileState(Enum):
+    CENTER = 1
+    UP = 2
+    DOWN = 3
+    LEFT = 4
+    RIGHT = 5
+    MID = 6
+    MID_HORIZONTAL = 7
+    MID_VERTICAL = 8
+    WATER = 9
+    EMPTY = 10
+
+class Action:
+    def __init__(self, initial, final):
+        self.initial = initial
+        self.final = final
+
+    def getInitial(self):
+        return self.initial
+    
+    def getFinal(self):
+        return self.final
 
 class BimaruState:
     state_id = 0
@@ -35,18 +62,24 @@ class BimaruState:
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
 
+    row_values = list()
+    column_values = list()
+    modified_row_values = list()
+    modified_column_values = list()
+    board_matrix = list()
+
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         # TODO
         pass
 
-    def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
+    def adjacent_vertical_values(self, row: int, col: int):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
         # TODO
         pass
 
-    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
+    def adjacent_horizontal_values(self, row: int, col: int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         # TODO
@@ -63,17 +96,55 @@ class Board:
             > from sys import stdin
             > line = stdin.readline().split()
         """
-        # TODO
-        pass
 
-    # TODO: outros metodos da classe
+        row = stdin.readline().split()
+        column = stdin.readline().split()
+        n = stdin.readline()
+        board = Board()
+        for i in range(1,11):
+            board.row_values.append(row[i])
+            board.modified_row_values.append(row[i])
+
+        for i in range(1,11):
+            board.column_values.append(column[i])
+            board.modified_column_values.append(column[i])
+
+        for i in range(0,10):
+            row = list()
+            for j in range(0,10):
+                row.append(TileState.EMPTY)
+            board.board_matrix.append(row)
+            
+        
+        for i in range(0,n):
+            hint = stdin.readline()
+            x = hint[1]
+            y = hint[2]
+            tile_type = hint[3]
+            #W (water), C (circle), T (top), M (middle),B (bottom), L (left) e R (right).
+            if tile_type == 'W':
+                real_type = TileState.WATER
+            elif tile_type == 'C':
+                real_type = TileState.CENTER
+            elif tile_type == 'T':
+                real_type = TileState.UP
+            elif tile_type == 'M':
+                real_type = TileState.MIDDLE
+            elif tile_type == 'B':
+                real_type = TileState.DOWN
+            elif tile_type == 'L':
+                real_type = TileState.LEFT
+            elif tile_type == 'R':
+                real_type = TileState.RIGHT
+            board.board_matrix[x][y] = real_type
+        return board
+    
 
 
 class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
-        # TODO
-        pass
+        self.initial = board
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -105,9 +176,5 @@ class Bimaru(Problem):
 
 
 if __name__ == "__main__":
-    # TODO:
-    # Ler o ficheiro do standard input,
-    # Usar uma técnica de procura para resolver a instância,
-    # Retirar a solução a partir do nó resultante,
-    # Imprimir para o standard output no formato indicado.
-    pass
+    board = Board.parse_instance
+    bimaru = Bimaru(board)
