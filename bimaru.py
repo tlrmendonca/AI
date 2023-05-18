@@ -175,12 +175,20 @@ class Bimaru(Problem):
         self.initial = board
         self.current = board
 
+    def algorithm(self, actionList):
+        pass
+
+    def pickHighestProbability(self, actionList):
+        pass
+
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        # TODO
-        pass
-
+        actionList = list()
+        if(self.algorithm(actionList).len() == 0):
+            self.pickHighestProbability(actionList)
+        
+        return [action for action in actionList]
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
