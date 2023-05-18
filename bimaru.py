@@ -194,8 +194,7 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        # TODO
-        pass
+        state.board = action;
 
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
