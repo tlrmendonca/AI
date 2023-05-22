@@ -40,6 +40,14 @@ class Line:
         self.water = water
         self.boats = boats
 
+    def checkWater(self):
+        if(self.total - self.boats == 0):
+            return True
+
+    def checkFill(self):
+        if(10 - self.water - self.boats == self.total):
+            return True
+        
     def addWater(self):
         self.water += 1;
 
@@ -78,8 +86,11 @@ class Board:
     """Representação interna de um tabuleiro de Bimaru."""
 
     board_matrix = list()
-    row_probabilities = list()
-    column_probabilities = list()
+    rows = list()
+    columns = list()
+
+    def update(self):
+        pass
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -126,11 +137,11 @@ class Board:
         board = Board()
         for i in range(1,11):
             line = line(int(row[i]),0,0)
-            board.row_probabilities.append(line)
+            board.rows.append(line)
 
         for i in range(1,11):
             line = line(int(column[i]),0,0)
-            board.col_probabilities.append(line)
+            board.columns.append(line)
 
         for i in range(0,10):
             row = list()
@@ -175,20 +186,60 @@ class Bimaru(Problem):
         self.initial = board
         self.current = board
 
-    def algorithm(self, actionList):
-        pass
+    def checkWater(self):
+        actionList = list()
+        for i in range(0, 10):
+            modifiedBoard = self.initial
+            if(self.initial.rows[i].checkWater()):
+                for j in range(0,10):
+                    if(self.current.board_matrix[i][j] == TileState.EMPTY):
+                        modifiedBoard.board_matrix[i][j] = TileState.WATER
+                modifiedBoard.update()
+                actionList.append(modifiedBoard)
+            if(self.initial.columns[i].checkWater()):
+                for j in range(0,10):
+                    if(self.current.board_matrix[j][i] == TileState.EMPTY):
+                        modifiedBoard.board_matrix[j][i] = TileState.WATER
+                modifiedBoard.update()
+                actionList.append(modifiedBoard)
+        return actionList
+    
+    def checkFill(self):
+        actionList = list()
+        for i in range(0, 10):
+            modifiedBoard = self.initial
+            if(self.initial.rows[i].checkFill()):
+                for j in range(0,10):
+                    if(self.current.board_matrix[i][j] == TileState.EMPTY):
+                        modifiedBoard.board_matrix[i][j] = TileState.MID
+                modifiedBoard.update()
+                actionList.append(modifiedBoard)
+            if(self.initial.columns[i].checkFill()):
+                for j in range(0,10):
+                    if(self.current.board_matrix[j][i] == TileState.EMPTY):
+                        modifiedBoard.board_matrix[j][i] = TileState.MID
+                modifiedBoard.update()
+                actionList.append(modifiedBoard)
+        return actionList
 
-    def pickHighestProbability(self, actionList):
+    def algorithm(self):
+        actionList = list()
+        actionList.append(self.checkWater(self))
+        actionList.append(self.checkFill(self))
+        
+
+    def pickHighestProbability(self):
         pass
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         actionList = list()
-        if(self.algorithm(actionList).len() == 0):
-            self.pickHighestProbability(actionList)
+        actionList.append(self.algorithm())
+        actionList.append(self.pickHighestProbability())
         
         return [action for action in actionList]
+    
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
