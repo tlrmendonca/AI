@@ -187,9 +187,8 @@ class Board:
         return i 
     
     def isBlockedBoat(self,row,col):
-        
-        return        
-
+        return False
+    
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -281,7 +280,7 @@ class Bimaru(Problem):
                     actionList[index] = action
                     index += 1
         for i in range(0,20):
-            print(actionList[i].type)
+            print(str(i) + ":" + str(actionList[i].type))
         return actionList
     
     def result(self, state: BimaruState, action: Action):
@@ -289,6 +288,7 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
+        print("Using Action" + str(action.type))
         if(action.type == FILL_ROW):
             if(self.value != WATER):
                 for i in range(0,9):
