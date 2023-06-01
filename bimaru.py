@@ -11,7 +11,8 @@ from sys import (
     stdin
 )
 from enum import Enum
-
+import copy as copy
+from pickle import loads, dumps
 from search import (
     Problem,
     Node,
@@ -31,7 +32,7 @@ MID = 'M'
 MID_HORIZONTAL = 'MH'
 MID_VERTICAL = 'MV'
 WATER = 'W'
-EMPTY = 'E'
+EMPTY = '-'
 
 FILL_ROW = 1
 FILL_COLUMN = 2
@@ -57,10 +58,10 @@ class Line:
         self.boats += 1
 
     def fullWater(self):
-        return 10 - self.total == self.water
+        return 10 - self.total <= self.water
     
     def fullBoat(self):
-        return self.total - self.boats == 0
+        return self.total - self.boats <= 0
 
     def getBoatProbability(self) -> int:
         return (self.total - self.boats) // (10 - self.boats - self.water)
@@ -128,9 +129,9 @@ class Board:
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         values = ['None', 'None']
-        if(col > 0):
+        if(row > 0):
             values[0] = self.board_matrix[row-1][col]
-        if(col < 9):
+        if(row < 9):
             values[1] = self.board_matrix[row+1][col]
         return values
 
@@ -173,6 +174,15 @@ class Board:
         return i 
     
     def isBlockedBoat(self,row,col):
+        for tile in self.adjacent_vertical_values(row,col):
+            if(tile != WATER and tile != EMPTY):
+                return True
+        for tile in self.adjacent_horizontal_values(row,col):
+            if(tile != WATER and tile != EMPTY):
+                return True
+        for tile in self.diagonal_values(row,col):
+            if(tile != WATER and tile != EMPTY):
+                return True
         return False
     
     @staticmethod
@@ -238,7 +248,6 @@ class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         self.initial = BimaruState(board)
-        self.current = BimaruState(board)
 
     def countEmpty(self,board):
         total=0
@@ -251,31 +260,29 @@ class Bimaru(Problem):
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+        print("Computing actions")
         index = 0
         actionList = [None] * 200
         for i in range(0,10):
             for j in range(0,10):
-                if((state.board.board_matrix[i][j] == EMPTY)
-                    and not (state.board.rows[i].fullWater())
-                    and not (state.board.columns[j].fullWater())):
+                if((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullWater()) and not (state.board.columns[j].fullWater())):
                     action = Action(FILL_TYLE,WATER,i,j)
                     actionList[index] = action
                     index += 1 
-                if ((state.board.board_matrix[i][j] == EMPTY) 
-                    and not (state.board.rows[i].fullBoat()) 
-                    and not (state.board.columns[j].fullBoat())
-                    and not (state.board.isBlockedBoat(i,j))):
+                if ((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullBoat()) and not (state.board.columns[j].fullBoat()) and not (state.board.isBlockedBoat(i,j))):
+                    print("Adding Boat action: " + str(state.board.board_matrix[i][j]))
                     action = Action(FILL_TYLE,MID,i,j)
                     actionList[index] = action
                     index += 1
-        return actionList
+        return [action for action in actionList]
     
-    def result(self, state: BimaruState, action: Action):
+    def result(self, state_original: BimaruState, action: Action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        print("Using Action: " + str(action.type) + str(action.value))
+        #print("Using Action: " + str(action.type) + str(action.value))
+        state = loads(dumps(state_original,-1))
         if(action.type == FILL_ROW):
             if(action.value != WATER):
                 for i in range(0,10):
@@ -293,21 +300,26 @@ class Bimaru(Problem):
                 for i in range(0,10):
                     state.board.set_value(i,action.x,action.value)
         elif(action.type == FILL_TYLE):
+            if(action.value == MID):
+                print("Placing it on: " + str(state.board.board_matrix[action.x][action.y]))
             state.board.set_value(action.x,action.y,action.value)
             #if(action.value != WATER):
             #    print("diagonal")
             #   state.board.put_water_diagonal_values(action.x,action.y)
 
-        print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
-        print("Spots left: " + str(self.countEmpty(state.board)))
-        print(state.board.board_matrix)
+        #print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
+        #print("Spots left: " + str(self.countEmpty(state.board)))
+        #for i in range(0,10):
+            #print(state.board.board_matrix[i])
         return state
+            
 
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        if(state.board.placed_waters + state.board.placed_boats != 100):
+        #print("Goal Test: "+ str(state.board.placed_waters + state.board.placed_boats))
+        if(self.countEmpty(state.board)):
             return False
         return True
 
