@@ -31,8 +31,8 @@ RIGHT = 'R'
 MID = 'M'
 MID_HORIZONTAL = 'MH'
 MID_VERTICAL = 'MV'
-WATER = 'W'
-EMPTY = '-'
+WATER = '~'
+EMPTY = ' '
 
 FILL_ROW = 1
 FILL_COLUMN = 2
@@ -185,6 +185,10 @@ class Board:
                 return True
         return False
     
+    def print(self):
+        for i in range(0,10):
+            print(self.board_matrix[i])
+    
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -262,19 +266,19 @@ class Bimaru(Problem):
         partir do estado passado como argumento."""
         print("Computing actions")
         index = 0
-        actionList = [None] * 200
+        actionList = []
         for i in range(0,10):
             for j in range(0,10):
                 if((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullWater()) and not (state.board.columns[j].fullWater())):
                     action = Action(FILL_TYLE,WATER,i,j)
-                    actionList[index] = action
+                    actionList.append(action)
                     index += 1 
                 if ((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullBoat()) and not (state.board.columns[j].fullBoat()) and not (state.board.isBlockedBoat(i,j))):
                     print("Adding Boat action: " + str(state.board.board_matrix[i][j]))
                     action = Action(FILL_TYLE,MID,i,j)
-                    actionList[index] = action
+                    actionList.append(action)
                     index += 1
-        return [action for action in actionList]
+        return actionList
     
     def result(self, state_original: BimaruState, action: Action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -309,8 +313,6 @@ class Bimaru(Problem):
 
         #print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
         #print("Spots left: " + str(self.countEmpty(state.board)))
-        #for i in range(0,10):
-            #print(state.board.board_matrix[i])
         return state
             
 
