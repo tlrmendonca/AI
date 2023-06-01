@@ -120,7 +120,6 @@ class Board:
             self.columns[col].addWater()
             self.placed_waters += 1
         else:
-
             self.rows[row].addBoat()
             self.columns[col].addBoat()
             self.placed_boats += 1
@@ -161,29 +160,16 @@ class Board:
         i = 0
         if(col > 0 and row > 0 and self.board_matrix[row-1][col-1] == EMPTY):
             i += 1
-            self.rows[row].addWater()
-            self.columns[col].addWater()
-            self.placed_waters += 1
-            self.board_matrix[row-1][col-1] = WATER
+            self.set_value(row-1,col-1,WATER)
         if(col > 0 and row < 9 and self.board_matrix[row+1][col-1] == EMPTY):
             i += 1
-            self.rows[row].addWater()
-            self.columns[col].addWater()
-            self.placed_waters += 1
-            self.board_matrix[row+1][col-1] = WATER
+            self.set_value(row+1,col-1,WATER)
         if(row > 0 and col < 9 and self.board_matrix[row-1][col+1] == EMPTY):
             i += 1
-            self.rows[row].addWater()
-            self.columns[col].addWater()
-            self.placed_waters += 1
-            self.board_matrix[row-1][col+1] = WATER
+            self.set_value(row-1,col+1,WATER)
         if(row < 9 and col < 9 and self.board_matrix[row+1][col+1] == EMPTY):
             i += 1
-            self.rows[row].addWater()
-            self.columns[col].addWater()
-            self.placed_waters += 1
-            self.board_matrix[row+1][col+1] = WATER
-
+            self.set_value(row+1,col+1,WATER)
         return i 
     
     def isBlockedBoat(self,row,col):
@@ -215,9 +201,7 @@ class Board:
             board.columns.append(line)
 
         for i in range(0,10):
-            row = list()
-            for j in range(0,10):
-                row.append(EMPTY)
+            row = [EMPTY] * 10
             board.board_matrix.append(row)
             
         for i in range(0,int(n[0])):
@@ -227,13 +211,9 @@ class Board:
             tile_type = hint[3]
             #W (water), C (circle), T (top), M (middle),B (bottom), L (left) e R (right).
             if tile_type == 'W':
-                board.rows[x].addWater()
-                board.columns[y].addWater()
                 real_type = WATER
             else:
                 board.put_water_diagonal_values(x,y)
-                board.rows[x].addBoat()
-                board.columns[y].addBoat()
                 if tile_type == 'C':
                     real_type = CENTER
                 elif tile_type == 'T':
@@ -249,6 +229,7 @@ class Board:
             
             board.set_value(x, y, real_type)
         print("Board created!")
+        print("Placed stuff: " + str(board.placed_waters + board.placed_boats))
         return board
     
 
@@ -259,28 +240,34 @@ class Bimaru(Problem):
         self.initial = BimaruState(board)
         self.current = BimaruState(board)
 
+    def countEmpty(self,board):
+        total=0
+        for i in range(0,10):
+            for j in range(0,10):
+                if(board.board_matrix[i][j] == EMPTY):
+                    total+=1
+        return total
+
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         index = 0
         actionList = [None] * 200
-        for i in range(0,9):
-            for j in range(0,9):
-                if((state.board.get_value(i,j) == EMPTY)
+        for i in range(0,10):
+            for j in range(0,10):
+                if((state.board.board_matrix[i][j] == EMPTY)
                     and not (state.board.rows[i].fullWater())
                     and not (state.board.columns[j].fullWater())):
                     action = Action(FILL_TYLE,WATER,i,j)
                     actionList[index] = action
-                    index += 1
-                if ((state.board.get_value(i,j) == EMPTY) 
+                    index += 1 
+                if ((state.board.board_matrix[i][j] == EMPTY) 
                     and not (state.board.rows[i].fullBoat()) 
                     and not (state.board.columns[j].fullBoat())
                     and not (state.board.isBlockedBoat(i,j))):
                     action = Action(FILL_TYLE,MID,i,j)
                     actionList[index] = action
                     index += 1
-        for i in range(0,20):
-            print(str(i) + ":" + str(actionList[i].type))
         return actionList
     
     def result(self, state: BimaruState, action: Action):
@@ -288,28 +275,32 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        print("Using Action" + str(action.type))
+        print("Using Action: " + str(action.type) + str(action.value))
         if(action.type == FILL_ROW):
-            if(self.value != WATER):
-                for i in range(0,9):
+            if(action.value != WATER):
+                for i in range(0,10):
                     state.board.set_value(action.x,i,action.value)
                     state.board.put_water_diagonal_value(action.x,i)
             else:
-                for i in range(0,9):
+                for i in range(0,10):
                     state.board.set_value(action.x,i,action.value)
         elif(action.type == FILL_COLUMN):
-            if(self.value != WATER):
-                for i in range(0,9):
+            if(action.value != WATER):
+                for i in range(0,10):
                     state.board.set_value(i,action.x,action.value)
                     state.board.put_water_diagonal_value(i,action.x)
             else:
-                for i in range(0,9):
+                for i in range(0,10):
                     state.board.set_value(i,action.x,action.value)
         elif(action.type == FILL_TYLE):
             state.board.set_value(action.x,action.y,action.value)
-            if(self.value != WATER):
-                state.board.put_water_diagonal_values(action.x,action.y)
+            #if(action.value != WATER):
+            #    print("diagonal")
+            #   state.board.put_water_diagonal_values(action.x,action.y)
 
+        print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
+        print("Spots left: " + str(self.countEmpty(state.board)))
+        print(state.board.board_matrix)
         return state
 
     def goal_test(self, state: BimaruState):
@@ -333,4 +324,3 @@ if __name__ == "__main__":
 
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print(), sep="")
-    
