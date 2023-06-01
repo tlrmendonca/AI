@@ -33,6 +33,10 @@ MID_VERTICAL = 'MV'
 WATER = 'W'
 EMPTY = 'E'
 
+FILL_ROW = 1
+FILL_COLUMN = 2
+FILL_TYLE = 3
+
 class Line:
     def __init__(self,total,water,boats):
         self.total = total
@@ -44,14 +48,19 @@ class Line:
             return True
 
     def checkFill(self):
-        if(10 - self.water - self.boats == self.total):
-            return True
+        return 10 - self.water - self.boats == self.total
         
     def addWater(self):
         self.water += 1
 
     def addBoat(self):
         self.boats += 1
+
+    def fullWater(self):
+        return 10 - self.total == self.water
+    
+    def fullBoat(self):
+        return self.total - self.boats == 0
 
     def getBoatProbability(self) -> int:
         return (self.total - self.boats) // (10 - self.boats - self.water)
@@ -60,15 +69,17 @@ class Line:
         return 100 - self.getBoatProbability()
 
 class Action:
-    def __init__(self, initial, final):
-        self.initial = initial
-        self.final = final
-
-    def getInitial(self):
-        return self.initial
+    def __init__(self, type, value, x):
+        self.type = type
+        self.value = value
+        self.x = x
     
-    def getFinal(self):
-        return self.final
+    def __init__(self, type, value, x, y):
+        self.type = type
+        self.value = value
+        self.x = x
+        self.y = y
+    
 
 class BimaruState:
     state_id = 0
@@ -105,29 +116,79 @@ class Board:
         self.board_matrix[row][col] = type
         
         if(type == WATER):
+            self.rows[row].addWater()
+            self.columns[col].addWater()
             self.placed_waters += 1
         else:
+
+            self.rows[row].addBoat()
+            self.columns[col].addBoat()
             self.placed_boats += 1
 
     def adjacent_vertical_values(self, row: int, col: int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        values = list()
-        if(col < 9):
-            values.append(self.board_matrix[row][col+1])
+        values = ['None', 'None']
         if(col > 0):
-            values.append(self.board_matrix[row][col-1])
+            values[0] = self.board_matrix[row-1][col]
+        if(col < 9):
+            values[1] = self.board_matrix[row+1][col]
         return values
 
     def adjacent_horizontal_values(self, row: int, col: int):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        values = list()
-        if(row < 9):
-            values.append(self.board_matrix[row+1][col])
-        if(row > 0):
-            values.append(self.board_matrix[row-1][col])
+        values = ['None', 'None']
+        if(col > 0):
+            values[0] = self.board_matrix[row][col-1]
+        if(col < 9):
+            values[1] = self.board_matrix[row][col+1]
         return values
+    
+    def diagonal_values(self,row,col):
+        values = ['None', 'None', 'None', 'None']
+        if(col > 0 and row > 0):
+            values[0] = self.board_matrix[row-1][col-1]
+        if(col > 0 and row < 9):
+            values[1] = self.board_matrix[row+1][col-1]
+        if(row > 0 and col < 9):
+            values[2] = self.board_matrix[row-1][col+1]
+        if(row < 9 and col < 9):
+            values[3] = self.board_matrix[row+1][col+1]
+        return values
+    
+    def put_water_diagonal_values(self,row,col):
+        i = 0
+        if(col > 0 and row > 0 and self.board_matrix[row-1][col-1] == EMPTY):
+            i += 1
+            self.rows[row].addWater()
+            self.columns[col].addWater()
+            self.placed_waters += 1
+            self.board_matrix[row-1][col-1] = WATER
+        if(col > 0 and row < 9 and self.board_matrix[row+1][col-1] == EMPTY):
+            i += 1
+            self.rows[row].addWater()
+            self.columns[col].addWater()
+            self.placed_waters += 1
+            self.board_matrix[row+1][col-1] = WATER
+        if(row > 0 and col < 9 and self.board_matrix[row-1][col+1] == EMPTY):
+            i += 1
+            self.rows[row].addWater()
+            self.columns[col].addWater()
+            self.placed_waters += 1
+            self.board_matrix[row-1][col+1] = WATER
+        if(row < 9 and col < 9 and self.board_matrix[row+1][col+1] == EMPTY):
+            i += 1
+            self.rows[row].addWater()
+            self.columns[col].addWater()
+            self.placed_waters += 1
+            self.board_matrix[row+1][col+1] = WATER
+
+        return i 
+    
+    def isBlockedBoat(self,row,col):
+        
+        return        
 
     @staticmethod
     def parse_instance():
@@ -171,6 +232,7 @@ class Board:
                 board.columns[y].addWater()
                 real_type = WATER
             else:
+                board.put_water_diagonal_values(x,y)
                 board.rows[x].addBoat()
                 board.columns[y].addBoat()
                 if tile_type == 'C':
@@ -195,25 +257,60 @@ class Board:
 class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
-        self.initial = board
-        self.current = board
-        
-    def pickHighestProbability(self):
-        actionList = list()
+        self.initial = BimaruState(board)
+        self.current = BimaruState(board)
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        actionList = list()
-        
-        return [action for action in actionList]
+        index = 0
+        actionList = [None] * 200
+        for i in range(0,9):
+            for j in range(0,9):
+                if((state.board.get_value(i,j) == EMPTY)
+                    and not (state.board.rows[i].fullWater())
+                    and not (state.board.columns[j].fullWater())):
+                    action = Action(FILL_TYLE,WATER,i,j)
+                    actionList[index] = action
+                    index += 1
+                if ((state.board.get_value(i,j) == EMPTY) 
+                    and not (state.board.rows[i].fullBoat()) 
+                    and not (state.board.columns[j].fullBoat())
+                    and not (state.board.isBlockedBoat(i,j))):
+                    action = Action(FILL_TYLE,MID,i,j)
+                    actionList[index] = action
+                    index += 1
+        for i in range(0,20):
+            print(actionList[i].type)
+        return actionList
     
-    def result(self, state: BimaruState, action):
+    def result(self, state: BimaruState, action: Action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        state.board = action
+        if(action.type == FILL_ROW):
+            if(self.value != WATER):
+                for i in range(0,9):
+                    state.board.set_value(action.x,i,action.value)
+                    state.board.put_water_diagonal_value(action.x,i)
+            else:
+                for i in range(0,9):
+                    state.board.set_value(action.x,i,action.value)
+        elif(action.type == FILL_COLUMN):
+            if(self.value != WATER):
+                for i in range(0,9):
+                    state.board.set_value(i,action.x,action.value)
+                    state.board.put_water_diagonal_value(i,action.x)
+            else:
+                for i in range(0,9):
+                    state.board.set_value(i,action.x,action.value)
+        elif(action.type == FILL_TYLE):
+            state.board.set_value(action.x,action.y,action.value)
+            if(self.value != WATER):
+                state.board.put_water_diagonal_values(action.x,action.y)
+
+        return state
 
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
@@ -232,4 +329,8 @@ if __name__ == "__main__":
     print("Program Started")
     board = Board.parse_instance()
     bimaru = Bimaru(board)
+    goal_node = depth_first_tree_search(bimaru)
+
+    print("Is goal?", bimaru.goal_test(goal_node.state))
+    print("Solution:\n", goal_node.state.board.print(), sep="")
     
