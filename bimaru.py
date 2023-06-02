@@ -32,7 +32,7 @@ MID = 'M'
 MID_HORIZONTAL = 'MH'
 MID_VERTICAL = 'MV'
 WATER = '~'
-EMPTY = ' '
+EMPTY = '.'
 
 FILL_ROW = 1
 FILL_COLUMN = 2
@@ -74,6 +74,7 @@ class Action:
         self.type = type
         self.value = value
         self.x = x
+        self.y = '-'
     
     def __init__(self, type, value, x, y):
         self.type = type
@@ -81,6 +82,8 @@ class Action:
         self.x = x
         self.y = y
     
+    def toString(self):
+        return str(self.type) + " " + str(self.value) + " " + str(self.x) + " " + str(self.y)
 
 class BimaruState:
     state_id = 0
@@ -184,8 +187,15 @@ class Board:
         return False
     
     def print(self):
+        print('   ', end='')
         for i in range(0,10):
-            print(self.board_matrix[i])
+            print(' ' + str(self.columns[i].total) + ' ', end='')
+        print('')
+        for i in range(0,10):
+            print(str(self.rows[i].total) + ' [',end='')
+            for j in range(0,10):
+                print(' ' + self.board_matrix[i][j] + ' ', end='')
+            print(']')
     
     @staticmethod
     def parse_instance():
@@ -262,20 +272,16 @@ class Bimaru(Problem):
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        #print("Computing actions")
-        index = 0
+        print("Computing actions")
         actionList = []
         for i in range(0,10):
             for j in range(0,10):
                 if((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullWater()) and not (state.board.columns[j].fullWater())):
                     action = Action(FILL_TYLE,WATER,i,j)
                     actionList.append(action)
-                    index += 1 
                 if ((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullBoat()) and not (state.board.columns[j].fullBoat()) and not (state.board.isBlockedBoat(i,j))):
-                    #print("Adding Boat action: " + str(state.board.board_matrix[i][j]))
                     action = Action(FILL_TYLE,MID,i,j)
                     actionList.append(action)
-                    index += 1
         return actionList
     
     def result(self, state_original: BimaruState, action: Action):
@@ -333,14 +339,13 @@ if __name__ == "__main__":
     print("Program Started")
     board = Board.parse_instance()
     bimaru = Bimaru(board)
-    actionList = bimaru.actions(bimaru.initial)
-    #goal_node = depth_first_tree_search(bimaru)
-    bimaru.initial.board.print()
-    print("#####################")
-    for action in actionList:
-        if(action.value == MID):
-            break;
-    bimaru.result(bimaru.initial,action).board.print()
 
-    #print("Is goal?", bimaru.goal_test(goal_node.state))
-    #print("Solution:\n", goal_node.state.board.print(), sep="")
+    board.print()
+    i = 0;
+    for action in bimaru.actions(bimaru.initial):
+        print(str(i) + ':' + action.toString())
+        i = i + 1
+    # goal_node = depth_first_tree_search(bimaru)
+
+    print("Is goal?", bimaru.goal_test(goal_node.state))
+    print("Solution:\n", goal_node.state.board.print(), sep="")
