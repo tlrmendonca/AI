@@ -96,8 +96,6 @@ class BimaruState:
     def __lt__(self, other):
         return self.id < other.id
 
-    # TODO: outros metodos da classe
-
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
@@ -178,13 +176,13 @@ class Board:
     
     def isBlockedBoat(self,row,col):
         for tile in self.adjacent_vertical_values(row,col):
-            if(tile != WATER and tile != EMPTY):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         for tile in self.adjacent_horizontal_values(row,col):
-            if(tile != WATER and tile != EMPTY):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         for tile in self.diagonal_values(row,col):
-            if(tile != WATER and tile != EMPTY):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         return False
     
@@ -310,8 +308,8 @@ class Bimaru(Problem):
                 for i in range(0,10):
                     state.board.set_value(i,action.x,action.value)
         elif(action.type == FILL_TYLE):
-            if(action.value == MID):
-                print("Placing it on: " + str(state.board.board_matrix[action.x][action.y]))
+            #if(action.value == MID):
+                #print("Placing it on: " + str(state.board.board_matrix[action.x][action.y]))
             state.board.set_value(action.x,action.y,action.value)
             #if(action.value != WATER):
             #    print("diagonal")
@@ -319,6 +317,7 @@ class Bimaru(Problem):
 
         #print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
         #print("Spots left: " + str(self.countEmpty(state.board)))
+        #print(state.id)
         return state
             
 
