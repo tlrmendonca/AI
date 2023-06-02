@@ -93,8 +93,6 @@ class BimaruState:
     def __lt__(self, other):
         return self.id < other.id
 
-    # TODO: outros metodos da classe
-
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
@@ -175,13 +173,13 @@ class Board:
     
     def isBlockedBoat(self,row,col):
         for tile in self.adjacent_vertical_values(row,col):
-            if(tile != WATER and tile != EMPTY):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         for tile in self.adjacent_horizontal_values(row,col):
-            if(tile != WATER and tile != EMPTY):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         for tile in self.diagonal_values(row,col):
-            if(tile != WATER and tile != EMPTY):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         return False
     
@@ -264,7 +262,7 @@ class Bimaru(Problem):
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        print("Computing actions")
+        #print("Computing actions")
         index = 0
         actionList = []
         for i in range(0,10):
@@ -274,7 +272,7 @@ class Bimaru(Problem):
                     actionList.append(action)
                     index += 1 
                 if ((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullBoat()) and not (state.board.columns[j].fullBoat()) and not (state.board.isBlockedBoat(i,j))):
-                    print("Adding Boat action: " + str(state.board.board_matrix[i][j]))
+                    #print("Adding Boat action: " + str(state.board.board_matrix[i][j]))
                     action = Action(FILL_TYLE,MID,i,j)
                     actionList.append(action)
                     index += 1
@@ -304,8 +302,8 @@ class Bimaru(Problem):
                 for i in range(0,10):
                     state.board.set_value(i,action.x,action.value)
         elif(action.type == FILL_TYLE):
-            if(action.value == MID):
-                print("Placing it on: " + str(state.board.board_matrix[action.x][action.y]))
+            #if(action.value == MID):
+                #print("Placing it on: " + str(state.board.board_matrix[action.x][action.y]))
             state.board.set_value(action.x,action.y,action.value)
             #if(action.value != WATER):
             #    print("diagonal")
@@ -313,6 +311,7 @@ class Bimaru(Problem):
 
         #print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
         #print("Spots left: " + str(self.countEmpty(state.board)))
+        #print(state.id)
         return state
             
 
@@ -334,7 +333,14 @@ if __name__ == "__main__":
     print("Program Started")
     board = Board.parse_instance()
     bimaru = Bimaru(board)
+    actionList = bimaru.actions(bimaru.initial)
     goal_node = depth_first_tree_search(bimaru)
+    bimaru.initial.board.print()
+    print("#####################")
+    for action in actionList:
+        if(action.value == MID):
+            break;
+    bimaru.result(bimaru.initial,action).board.print()
 
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print(), sep="")
