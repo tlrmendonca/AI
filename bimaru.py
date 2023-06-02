@@ -334,7 +334,7 @@ if __name__ == "__main__":
     board = Board.parse_instance()
     bimaru = Bimaru(board)
     actionList = bimaru.actions(bimaru.initial)
-    goal_node = depth_first_tree_search(bimaru)
+    #goal_node = depth_first_tree_search(bimaru)
     bimaru.initial.board.print()
     print("#####################")
     for action in actionList:
@@ -342,5 +342,5 @@ if __name__ == "__main__":
             break;
     bimaru.result(bimaru.initial,action).board.print()
 
-    print("Is goal?", bimaru.goal_test(goal_node.state))
-    print("Solution:\n", goal_node.state.board.print(), sep="")
+    #print("Is goal?", bimaru.goal_test(goal_node.state))
+    #print("Solution:\n", goal_node.state.board.print(), sep="")
