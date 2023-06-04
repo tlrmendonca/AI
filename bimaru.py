@@ -339,6 +339,14 @@ class Board:
                 else:
                     print(' ' + self.board_matrix[i][j] + ' ', end='')
             print(']')
+    def verify_lines(self):
+        for i in range(0,10):
+            if(self.rows[i].water + self.rows[i].water > 10):
+                return False
+            if(self.columns[i].water + self.columns[i].water > 10):
+                return False
+        return True
+    
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
