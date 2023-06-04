@@ -341,9 +341,9 @@ class Board:
             print(']')
     def verify_lines(self):
         for i in range(0,10):
-            if(self.rows[i].water + self.rows[i].water > 10):
+            if(self.rows[i].water + self.rows[i].total > 10):
                 return False
-            if(self.columns[i].water + self.columns[i].water > 10):
+            if(self.columns[i].water + self.columns[i].total > 10):
                 return False
         return True
     
@@ -456,8 +456,6 @@ class Bimaru(Problem):
         #Try to find spots for 3-boat
         for i in range(0,8): #searching downwards orientation, starting at [i,j]
             for j in range(0,10):
-                if(i == 0 and j == 6):
-                  print("DEBUG" + str((state.board.columns[j].total - state.board.columns[j].boats) >= 3))
                 if (state.board.enough_space('Column', i, j, 3) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i+1,j,'Middle') and
@@ -618,12 +616,13 @@ class Bimaru(Problem):
                         state.board.set_value(j,i,WATER)
         return state
             
-
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
         #print("Goal Test: "+ str(state.board.placed_waters + state.board.placed_boats))
+        if(not state.board.verify_lines()):
+            return False
         if(self.countEmpty(state.board)):
             return False
         return True
