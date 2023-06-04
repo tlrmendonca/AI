@@ -127,13 +127,12 @@ class Board:
             self.placed_boats += 1
         self.board_matrix[row][col] = type
 
-    def boat_available(self,row,col):
+    def boat_available(self,row,col,type='Mid'):
       '''Defines if position [row,col] is available for a boat'''
       # position needs to empty or any type of boat
       if(self.board_matrix[row][col] == WATER):
         return False
 
-      # !! changing order might have a small impact on performance (because 'and' stops on the first false)
       vertical = self.adjacent_vertical_values(row,col)
       horizontal = self.adjacent_horizontal_values(row,col)
       diagonal = self.diagonal_values(row,col)
@@ -143,17 +142,24 @@ class Board:
       if(vertical[0] != WATER and vertical[0] != EMPTY and vertical[0] != 'None' and vertical[0] != UP and vertical[0] != MID
          and vertical[1] != WATER and vertical[1] != EMPTY and vertical[1] != 'None' and vertical[1] != DOWN and vertical[0] != MID):
         return False
+      # exceptions: beggining below up or end above bottom
+      if ((vertical[0] == UP and type == 'Begin') or (vertical[1] == DOWN and type == 'End')):
+          return False
+      
       # horizontally left has to be empty, water, none, a left end or a middle
       # right has to be empty, water, none, a right end or a middle
       if(horizontal[0] != WATER and horizontal[0] != EMPTY and horizontal[0] != 'None' and horizontal[0] != LEFT and vertical[0] != MID
           and horizontal[1] != WATER and horizontal[1] != EMPTY and horizontal[1] != 'None' and horizontal[1] != RIGHT and vertical[0] != MID):
         return False
+      # exceptions: beggining right of left or end left of right
+      if ((horizontal[0] == LEFT and type == 'Begin') or (horizontal[1] == RIGHT and type == 'End')):
+          return False
 
       # diagonally all spaces have to be empty, water or none
       for tile in diagonal:
         if(tile != WATER and tile != EMPTY and tile != 'None'):
           return False
-      
+
       # a lof of checks but also simplifies boat positioning
       return True
 
@@ -352,7 +358,7 @@ class Board:
                 elif tile_type == 'T':
                     board.put_water_horizontal(x,y)
                     real_type = UP
-                elif tile_type == 'M':
+                elif tile_type == 'M': 
                     real_type = MID
                 elif tile_type == 'B':
                     board.put_water_horizontal(x,y)
@@ -464,17 +470,17 @@ class Bimaru(Problem):
         #Try to find spots for 4-boat
         for i in range(0,7): #searching downwards orientation, starting at [i,j]
             for j in range(0,10):
-                if (state.board.boat_available(i,j) and # All position are available
-                    state.board.boat_available(i+1,j) and
-                    state.board.boat_available(i+2,j) and
-                    state.board.boat_available(i+3,j)):
+                if (state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i+1,j,'Middle') and
+                    state.board.boat_available(i+2,j,'Middle') and
+                    state.board.boat_available(i+3,j,'End')):
                   actionList.append(Action(4, ((i,j),(i+1,j),(i+2,j),(i+3,j)) ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,7):
-                if (state.board.boat_available(i,j) and # All position are available
-                    state.board.boat_available(i,j+1) and
-                    state.board.boat_available(i,j+2) and
-                    state.board.boat_available(i,j+3)):
+                if (state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i,j+1,'Middle') and
+                    state.board.boat_available(i,j+2,'Middle') and
+                    state.board.boat_available(i,j+3,'End')):
                   actionList.append(Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)) ))
         return actionList
     
