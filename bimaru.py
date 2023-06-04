@@ -492,7 +492,7 @@ class Bimaru(Problem):
                     not state.board.isBlockedBoat(i,j) and #Not blocked
                     not state.board.rows[i].fullBoat() and #Row not full
                     not state.board.columns[j].fullBoat()): #Column not full
-                  actionList.append(Action(1, ((i,j)), VERTICAL))
+                  actionList.append(Action(1, (i,j), VERTICAL))
         return list(reversed(actionList))
     
     def result(self, state_original: BimaruState, action: Action):
@@ -601,12 +601,12 @@ class Bimaru(Problem):
                 state.board.set_value(x,y,RIGHT)
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
-            elif(action.boat_size == 1):
-                x = action.coordinates[0][0]
-                y = action.coordinates[0][1]
-                state.board.set_value(x,y,CENTER)
-                state.board.put_water_horizontal(x,y)
-                state.board.put_water_vertical(x,y)
+        elif(action.boat_size == 1):
+            x = action.coordinates[0]
+            y = action.coordinates[1]
+            state.board.set_value(x,y,CENTER)
+            state.board.put_water_horizontal(x,y)
+            state.board.put_water_vertical(x,y)
         for i in range(0,10):
             if(state.board.rows[i].fullBoat()):
                 for j in range(0,10):
@@ -641,3 +641,6 @@ if __name__ == "__main__":
     goal_node = depth_first_tree_search(bimaru)
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print2(), sep="")
+
+    for action in bimaru.actions(goal_node.state):
+        print(action.toString())
