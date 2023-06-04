@@ -345,6 +345,14 @@ class Board:
                 else:
                     print(' ' + self.board_matrix[i][j] + ' ', end='')
             print(']')
+    def verify_lines(self):
+        for i in range(0,10):
+            if(self.rows[i].water + self.rows[i].total > 10):
+                return False
+            if(self.columns[i].water + self.columns[i].total > 10):
+                return False
+        return True
+    
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -488,7 +496,7 @@ class Bimaru(Problem):
                     not state.board.isBlockedBoat(i,j) and #Not blocked
                     not state.board.rows[i].fullBoat() and #Row not full
                     not state.board.columns[j].fullBoat()): #Column not full
-                  actionList.append(Action(1, ((i,j)), VERTICAL))
+                  actionList.append(Action(1, (i,j), VERTICAL))
         return list(reversed(actionList))
     
     def result(self, state_original: BimaruState, action: Action):
@@ -597,12 +605,12 @@ class Bimaru(Problem):
                 state.board.set_value(x,y,RIGHT)
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
-            elif(action.boat_size == 1):
-                x = action.coordinates[0][0]
-                y = action.coordinates[0][1]
-                state.board.set_value(x,y,CENTER)
-                state.board.put_water_horizontal(x,y)
-                state.board.put_water_vertical(x,y)
+        elif(action.boat_size == 1):
+            x = action.coordinates[0]
+            y = action.coordinates[1]
+            state.board.set_value(x,y,CENTER)
+            state.board.put_water_horizontal(x,y)
+            state.board.put_water_vertical(x,y)
         for i in range(0,10):
             if(state.board.rows[i].fullBoat()):
                 for j in range(0,10):
@@ -614,12 +622,13 @@ class Bimaru(Problem):
                         state.board.set_value(j,i,WATER)
         return state
             
-
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
         #print("Goal Test: "+ str(state.board.placed_waters + state.board.placed_boats))
+        if(not state.board.verify_lines()):
+            return False
         if(self.countEmpty(state.board)):
             return False
         return True
@@ -637,3 +646,6 @@ if __name__ == "__main__":
     goal_node = depth_first_tree_search(bimaru)
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print2(), sep="")
+
+    for action in bimaru.actions(goal_node.state):
+        print(action.toString())
