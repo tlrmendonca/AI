@@ -115,10 +115,8 @@ class Board:
     
     def set_value(self, row: int, col: int, type):
         if(type == WATER and self.board_matrix[row][col] == EMPTY):
-            print("added water")
             self.rows[row].addWater()
             self.columns[col].addWater()
-            print(self.columns[col].water)
             self.placed_waters += 1
         elif(self.is_boat(type) and self.board_matrix[row][col] == EMPTY):
             self.put_water_diagonal_values(row,col)
@@ -132,8 +130,16 @@ class Board:
       Note: THIS FUNCTION SHOULD NOT BE USED OUTSIDE THE PROPER CONTEXT
       Only available to check boat positioning where 'Begin' and 'End'
       are set as the top and bottom or left and right peices of the boat'''
-      # position needs to empty or any type of boat
+
+      # position needs to empty or any type of boat and lines not full
+      # we will check in later stages if the boat is adequate or not, when we
+      # check for adjacent values
       if(self.board_matrix[row][col] == WATER):
+        return False
+      # exceptions: begin and end can't be middle (impossible to check on this later)
+      if(type == 'Begin' and self.board_matrix[row][col] == MID or type == 'End' and self.board_matrix[row][col] == MID):
+        return False
+      if(self.rows[row].fullBoat() or self.columns[col].fullBoat()):
         return False
 
       vertical = self.adjacent_vertical_values(row,col)
@@ -147,7 +153,7 @@ class Board:
         return False
       # exceptions: beggining below up or end above bottom
       if ((vertical[0] == UP and type == 'Begin') or (vertical[1] == DOWN and type == 'End')):
-          return False
+        return False
       
       # horizontally left has to be empty, water, none, a left end or a middle
       # right has to be empty, water, none, a right end or a middle
@@ -156,7 +162,7 @@ class Board:
         return False
       # exceptions: beggining right of left or end left of right
       if ((horizontal[0] == LEFT and type == 'Begin') or (horizontal[1] == RIGHT and type == 'End')):
-          return False
+        return False
 
       # diagonally all spaces have to be empty, water or none
       for tile in diagonal:
@@ -165,6 +171,26 @@ class Board:
 
       # a lof of checks but also simplifies boat positioning
       return True
+
+    def enough_space(self,orientation,row,col,size):
+      '''Note: I wish I didn't have to write this
+      This is needed to calculate available space since we can use already placed boats,
+      so we have to go to each space and check if it's empty or not'''
+      num_reused = 0
+
+      if(orientation == 'Row'):
+        for i in range(0,size):
+          if(self.is_boat(self.board_matrix[row][col+i])):
+            num_reused += 1
+        return (self.rows[row].total - self.rows[row].boats + num_reused) >= size
+      
+      if(orientation == 'Column'):
+        for i in range(0,size):
+          if(self.is_boat(self.board_matrix[row+i][col])):
+            num_reused += 1
+        return (self.columns[col].total - self.columns[col].boats + num_reused) >= size
+      # "total" is the total number of boats to complete the line, "boats" is the already placed boats
+      # (including hints), "num_reused" is the placed boats in the required spaces
 
     def is_boat_position(self,row,col):
         return self.board_matrix[row][col] != 'None' and self.board_matrix[row][col] != WATER and self.board_matrix[row][col] != EMPTY
@@ -473,18 +499,53 @@ class Bimaru(Problem):
         #Try to find spots for 4-boat
         for i in range(0,7): #searching downwards orientation, starting at [i,j]
             for j in range(0,10):
-                if (state.board.boat_available(i,j,'Begin') and # All position are available
+                if (state.board.enough_space('Column', i, j, 4) and # There are enough spaces for a boat
+                    state.board.boat_available(i,j,'Begin') and # All position are available
                     state.board.boat_available(i+1,j,'Middle') and
                     state.board.boat_available(i+2,j,'Middle') and
                     state.board.boat_available(i+3,j,'End')):
                   actionList.append(Action(4, ((i,j),(i+1,j),(i+2,j),(i+3,j)) ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,7):
-                if (state.board.boat_available(i,j,'Begin') and # All position are available
+                if (state.board.enough_space('Row', i, j, 4) and # There are enough spaces for a boat
+                    state.board.boat_available(i,j,'Begin') and # All position are available
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'Middle') and
                     state.board.boat_available(i,j+3,'End')):
                   actionList.append(Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)) ))
+
+        #Try to find spots for 3-boat
+        for i in range(0,8): #searching downwards orientation, starting at [i,j]
+            for j in range(0,10):
+                if(i == 0 and j == 6):
+                  print("DEBUG" + str((state.board.columns[j].total - state.board.columns[j].boats) >= 3))
+                if (state.board.enough_space('Column', i, j, 3) and # There are enough spaces for a boat
+                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i+1,j,'Middle') and
+                    state.board.boat_available(i+2,j,'End')):
+                  actionList.append(Action(3, ((i,j),(i+1,j),(i+2,j)) ))
+        for i in range(0,10): #searching rightwards orientation, starting at [i,j]
+            for j in range(0,8):
+                if (state.board.enough_space('Row', i, j, 3) and # There are enough spaces for a boat
+                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i,j+1,'Middle') and
+                    state.board.boat_available(i,j+2,'End')):
+                  actionList.append(Action(3, ((i,j),(i,j+1),(i,j+2)) ))
+
+        # Try to find spots for 2-boat
+        for i in range(0,9): #searching downwards orientation, starting at [i,j]
+            for j in range(0,10):
+                if (state.board.enough_space('Column', i, j, 2) and # There are enough spaces for a boat
+                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i+1,j,'End')):
+                  actionList.append(Action(2, ((i,j),(i+1,j)) ))
+        for i in range(0,10): #searching rightwards orientation, starting at [i,j]
+            for j in range(0,9):
+                if (state.board.enough_space('Row', i, j, 2) and # There are enough spaces for a boat
+                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i,j+1,'End')):
+                  actionList.append(Action(2, ((i,j),(i,j+1)) ))
+        
         return actionList
     
     def result(self, state_original: BimaruState, action: Action):
@@ -561,5 +622,7 @@ if __name__ == "__main__":
     # print("Solution:\n", goal_node.state.board.print2(), sep="")
 
     board.print2()
+    i = 0
     for action in bimaru.actions(bimaru.initial):
-        print(action.toString())
+        print(str(i) + ': ' + action.toString())
+        i = i + 1
