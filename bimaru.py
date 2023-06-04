@@ -18,7 +18,7 @@ from search import (
     Node,
     astar_search,
     breadth_first_tree_search,
-    depth_first_tree_search,
+    depth_first_graph_search,
     greedy_search,
     recursive_best_first_search,
 )
@@ -126,6 +126,12 @@ class Board:
             self.columns[col].addBoat()
             self.placed_boats += 1
 
+    def is_boat_position(self,row,col):
+        return self.board_matrix[row][col] != 'None' and self.board_matrix[row][col] != WATER and self.board_matrix[row][col] != EMPTY
+    
+    def is_boat(self,tile):
+        return tile != 'None' and tile != WATER and tile != EMPTY
+
     def adjacent_vertical_values(self, row: int, col: int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
@@ -173,6 +179,18 @@ class Board:
             i += 1
             self.set_value(row+1,col+1,WATER)
         return i 
+    
+    def put_water_vertical(self,row,col):
+        if(row > 0):
+            self.board_matrix[row-1][col] = WATER
+        if(row < 9):
+            self.board_matrix[row+1][col] = WATER
+    
+    def put_water_horizontal(self,row,col):
+        if(col > 0):
+            self.board_matrix[row][col-1] = WATER
+        if(col < 9):
+            self.board_matrix[row][col+1] = WATER
     
     def isBlockedBoat(self,row,col):
         for tile in self.adjacent_vertical_values(row,col):
@@ -237,16 +255,22 @@ class Board:
             else:
                 board.put_water_diagonal_values(x,y)
                 if tile_type == 'C':
+                    board.put_water_horizontal(x,y)
+                    board.put_water_vertical(x,y)
                     real_type = CENTER
                 elif tile_type == 'T':
+                    board.put_water_horizontal(x,y)
                     real_type = UP
                 elif tile_type == 'M':
                     real_type = MID
                 elif tile_type == 'B':
+                    board.put_water_horizontal(x,y)
                     real_type = DOWN
                 elif tile_type == 'L':
+                    board.put_water_vertical(x,y)
                     real_type = LEFT
                 elif tile_type == 'R':
+                    board.put_water_vertical(x,y)
                     real_type = RIGHT
             
             board.set_value(x, y, real_type)
@@ -268,21 +292,48 @@ class Bimaru(Problem):
                 if(board.board_matrix[i][j] == EMPTY):
                     total+=1
         return total
+    
+    def update_boats(self,state: BimaruState):
+        board: Board = state.board
 
+        for i in range(0,10):
+            for j in range(0,10):
+                vertical_values = board.adjacent_vertical_values(i,j)
+                up = vertical_values[0]
+                down = vertical_values[1]
+                horizontal_values = board.adjacent_horizontal_values(i,j)
+                left = horizontal_values[0]
+                right = horizontal_values[1]
+
+                if(board.is_boat_position(i,j) and not board.is_boat(up) and not board.is_boat(down) and not board.is_boat(left) and not board.is_boat(right)):
+                    board.set_value(i,j,CENTER)
+                    board.put_water_horizontal(i,j)
+                    board.put_water_vertical(i,j)
+
+                
+#CENTER = 'C'
+#UP = 'T'
+#DOWN = 'B'
+#LEFT = 'L'
+#RIGHT = 'R'
+#MID = 'M'
+#MID_HORIZONTAL = 'MH'
+#MID_VERTICAL = 'MV'
+#WATER = '~'
+#EMPTY = '.'
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        print("Computing actions")
-        actionList = []
+        actionList = list()
         for i in range(0,10):
             for j in range(0,10):
-                if((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullWater()) and not (state.board.columns[j].fullWater())):
-                    action = Action(FILL_TYLE,WATER,i,j)
-                    actionList.append(action)
                 if ((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullBoat()) and not (state.board.columns[j].fullBoat()) and not (state.board.isBlockedBoat(i,j))):
                     action = Action(FILL_TYLE,MID,i,j)
                     actionList.append(action)
-        return actionList
+                if((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullWater()) and not (state.board.columns[j].fullWater())):
+                    action = Action(FILL_TYLE,WATER,i,j)
+                    actionList.append(action)
+        return list(actionList)
     
     def result(self, state_original: BimaruState, action: Action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -290,7 +341,14 @@ class Bimaru(Problem):
         das presentes na lista obtida pela execução de
         self.actions(state)."""
         #print("Using Action: " + str(action.type) + str(action.value))
-        state = loads(dumps(state_original,-1))
+        state = copy.copy(state_original)
+        state.board = copy.copy(state_original.board)
+        state.board.board_matrix = copy.deepcopy(state_original.board.board_matrix)
+        state.board.rows = copy.deepcopy(state_original.board.rows)
+        state.board.columns = copy.deepcopy(state_original.board.columns)
+        state.board.placed_boats : copy.deepcopy(state_original.board.placed_boats)
+        state.board.placed_waters : copy.deepcopy(state_original.board.placed_waters)
+
         if(action.type == FILL_ROW):
             if(action.value != WATER):
                 for i in range(0,10):
@@ -318,6 +376,7 @@ class Bimaru(Problem):
         #print("Placed stuff: " + str(state.board.placed_waters + state.board.placed_boats))
         #print("Spots left: " + str(self.countEmpty(state.board)))
         #print(state.id)
+        self.update_boats(state)
         return state
             
 
@@ -341,11 +400,11 @@ if __name__ == "__main__":
     bimaru = Bimaru(board)
 
     board.print()
-    i = 0;
-    for action in bimaru.actions(bimaru.initial):
-        print(str(i) + ':' + action.toString())
-        i = i + 1
-    # goal_node = depth_first_tree_search(bimaru)
+    # i = 0;
+    # for action in bimaru.actions(bimaru.initial):
+    #     print(str(i) + ':' + action.toString())
+    #     i = i + 1
+    goal_node = depth_first_graph_search(bimaru)
 
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print(), sep="")
