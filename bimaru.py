@@ -38,6 +38,9 @@ FILL_ROW = 1
 FILL_COLUMN = 2
 FILL_TILE = 3
 
+VERTICAL = 1
+HORIZONTAL = 2
+
 class Line:
     def __init__(self,total,water,boats):
         self.total = total
@@ -73,9 +76,10 @@ class Line:
 class Action:
     '''Class that represents an action to be taken on the board
     Consists of a boat size and tuple of tuples with coordinates'''
-    def __init__(self, boat_size, coordinates):
+    def __init__(self, boat_size, coordinates, orientation):
         self.boat_size = boat_size
         self.coordinates = coordinates
+        self.orientation = VERTICAL
         
     
     def toString(self):
@@ -490,7 +494,7 @@ class Bimaru(Problem):
                     state.board.boat_available(i+1,j,'Middle') and
                     state.board.boat_available(i+2,j,'Middle') and
                     state.board.boat_available(i+3,j,'End')):
-                  actionList.append(Action(4, ((i,j),(i+1,j),(i+2,j),(i+3,j)) ))
+                  actionList.append(Action(4, ((i,j),(i+1,j),(i+2,j),(i+3,j)),VERTICAL ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,7):
                 if (state.board.enough_space('Row', i, j, 4) and # There are enough spaces for a boat
@@ -498,7 +502,7 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'Middle') and
                     state.board.boat_available(i,j+3,'End')):
-                  actionList.append(Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)) ))
+                  actionList.append(Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)),HORIZONTAL ))
 
         #Try to find spots for 3-boat
         for i in range(0,8): #searching downwards orientation, starting at [i,j]
@@ -509,14 +513,14 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i+1,j,'Middle') and
                     state.board.boat_available(i+2,j,'End')):
-                  actionList.append(Action(3, ((i,j),(i+1,j),(i+2,j)) ))
+                  actionList.append(Action(3, ((i,j),(i+1,j),(i+2,j)),VERTICAL ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,8):
                 if (state.board.enough_space('Row', i, j, 3) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'End')):
-                  actionList.append(Action(3, ((i,j),(i,j+1),(i,j+2)) ))
+                  actionList.append(Action(3, ((i,j),(i,j+1),(i,j+2)), HORIZONTAL ))
 
         # Try to find spots for 2-boat
         for i in range(0,9): #searching downwards orientation, starting at [i,j]
@@ -524,13 +528,13 @@ class Bimaru(Problem):
                 if (state.board.enough_space('Column', i, j, 2) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All position are available
                     state.board.boat_available(i+1,j,'End')):
-                  actionList.append(Action(2, ((i,j),(i+1,j)) ))
+                  actionList.append(Action(2, ((i,j),(i+1,j)), VERTICAL ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,9):
                 if (state.board.enough_space('Row', i, j, 2) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'End')):
-                  actionList.append(Action(2, ((i,j),(i,j+1)) ))
+                  actionList.append(Action(2, ((i,j),(i,j+1)), HORIZONTAL ))
         
         # Try to find spots for 1-boat
         for i in range(0,10): 
@@ -539,7 +543,7 @@ class Bimaru(Problem):
                     not state.board.isBlockedBoat(i,j) and #Not blocked
                     not state.board.rows[i].fullBoat() and #Row not full
                     not state.board.columns[j].fullBoat()): #Column not full
-                  actionList.append(Action(1, ((i,j)) ))
+                  actionList.append(Action(1, ((i,j)), VERTICAL))
         return actionList
     
     def result(self, state_original: BimaruState, action: Action):
@@ -556,30 +560,106 @@ class Bimaru(Problem):
         state.board.placed_boats : copy.deepcopy(state_original.board.placed_boats)
         state.board.placed_waters : copy.deepcopy(state_original.board.placed_waters)
 
-        if(action.type == FILL_ROW):
-            if(action.value != WATER):
-                for i in range(0,10):
-                    state.board.set_value(action.x,i,action.value)
-                    state.board.put_water_diagonal_value(action.x,i)
-            else:
-                for i in range(0,10):
-                    if(state.board.get_value(action.x,i) == EMPTY):
-                        state.board.set_value(action.x,i,action.value)
-            state.board.columns[action.x].isFull = True
-        elif(action.type == FILL_COLUMN):
-            if(action.value != WATER):
-                for i in range(0,10):
-                    state.board.set_value(i,action.x,action.value)
-                    state.board.put_water_diagonal_value(i,action.x)
-            else:
-                for i in range(0,10):
-                    if(state.board.get_value(i,action.x) == EMPTY):
-                        state.board.set_value(i,action.x,action.value)
-            state.board.columns[action.x].isFull = True
-        elif(action.type == FILL_TILE):
-            state.board.set_value(action.x,action.y,action.value)
-
-        self.update_boats(state)
+        state.board = board
+        if(action.boat_size == 4):
+            if(action.orientation == VERTICAL):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,UP)
+                board.put_water_up(x,y)
+                board.put_water_horizontal(x,y)
+                x = action.coordinates[1][0]
+                y = action.coordinates[1][1]
+                board.set_value(x,y,MID)
+                board.put_water_horizontal(x,y)
+                x = action.coordinates[2][0]
+                y = action.coordinates[2][1]
+                board.set_value(x,y,MID)
+                board.put_water_horizontal(x,y)
+                x = action.coordinates[3][0]
+                y = action.coordinates[3][1]
+                board.set_value(x,y,DOWN)
+                board.put_water_down(x,y)
+                board.put_water_horizontal(x,y)
+            elif(action.orientation == HORIZONTAL):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,LEFT)
+                board.put_water_left(x,y)
+                board.put_water_vertical(x,y)
+                x = action.coordinates[1][0]
+                y = action.coordinates[1][1]
+                board.set_value(x,y,MID)
+                board.put_water_vertical(x,y)
+                x = action.coordinates[2][0]
+                y = action.coordinates[2][1]
+                board.set_value(x,y,MID)
+                board.put_water_vertical(x,y)
+                x = action.coordinates[3][0]
+                y = action.coordinates[3][1]
+                board.set_value(x,y,RIGHT)
+                board.put_water_right(x,y)
+                board.put_water_vertical(x,y)
+        elif(action.boat_size == 3):
+            if(action.orientation == VERTICAL):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,UP)
+                board.put_water_up(x,y)
+                board.put_water_horizontal(x,y)
+                x = action.coordinates[1][0]
+                y = action.coordinates[1][1]
+                board.set_value(x,y,MID)
+                board.put_water_horizontal(x,y)
+                x = action.coordinates[2][0]
+                y = action.coordinates[2][1]
+                board.set_value(x,y,DOWN)
+                board.put_water_down(x,y)
+                board.put_water_horizontal(x,y)
+            elif(action.orientation == HORIZONTAL):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,LEFT)
+                board.put_water_left(x,y)
+                board.put_water_vertical(x,y)
+                x = action.coordinates[1][0]
+                y = action.coordinates[1][1]
+                board.set_value(x,y,MID)
+                board.put_water_vertical(x,y)
+                x = action.coordinates[2][0]
+                y = action.coordinates[2][1]
+                board.set_value(x,y,RIGHT)
+                board.put_water_right(x,y)
+                board.put_water_vertical(x,y)
+        elif(action.boat_size == 2):
+            if(action.orientation == VERTICAL):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,UP)
+                board.put_water_up(x,y)
+                board.put_water_horizontal(x,y)
+                x = action.coordinates[1][0]
+                y = action.coordinates[1][1]
+                board.set_value(x,y,DOWN)
+                board.put_water_down(x,y)
+                board.put_water_horizontal(x,y)
+            elif(action.orientation == HORIZONTAL):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,LEFT)
+                board.put_water_left(x,y)
+                board.put_water_vertical(x,y)
+                x = action.coordinates[1][0]
+                y = action.coordinates[1][1]
+                board.set_value(x,y,RIGHT)
+                board.put_water_right(x,y)
+                board.put_water_vertical(x,y)
+            elif(action.boat_size == 1):
+                x = action.coordinates[0][0]
+                y = action.coordinates[0][1]
+                board.set_value(x,y,CENTER)
+                board.put_water_horizontal(x,y)
+                board.put_water_vertical(x,y)
         return state
             
 
@@ -601,19 +681,10 @@ if __name__ == "__main__":
     print("Program Started")
     board = Board.parse_instance()
     bimaru = Bimaru(board)
-    # bimaru.update_boats(bimaru.initial)
-    # board.print2()
-    # for action in bimaru.actions(bimaru.initial):
-    #     print(action.toString())
-    # print("#################################")
-    # bimaru.initial = bimaru.result(bimaru.initial, bimaru.actions(bimaru.initial)[-1])
-    # for action in bimaru.actions(bimaru.initial):
-    #     print(action.toString())
-    # bimaru.initial.board.print2()
 
-    # goal_node = depth_first_tree_search(bimaru)
-    # print("Is goal?", bimaru.goal_test(goal_node.state))
-    # print("Solution:\n", goal_node.state.board.print2(), sep="")
+    goal_node = depth_first_tree_search(bimaru)
+    print("Is goal?", bimaru.goal_test(goal_node.state))
+    print("Solution:\n", goal_node.state.board.print2(), sep="")
 
     board.print2()
     i = 0

@@ -205,11 +205,8 @@ def depth_first_tree_search(problem):
     """
 
     frontier = [Node(problem.initial)]  # Stack
-
-    i = 0
-    while frontier and i < 10:
+    while frontier:
         node = frontier.pop()
-        #i += 1
         node.state.board.print()
         if problem.goal_test(node.state):
             return node
