@@ -74,8 +74,6 @@ class Action:
     '''Class that represents an action to be taken on the board
     Consists of a boat size and tuple of tuples with coordinates'''
     def __init__(self, boat_size, coordinates):
-        if(len(coordinates) != boat_size):
-            raise Exception("Invalid action")
         self.boat_size = boat_size
         self.coordinates = coordinates
         
@@ -479,18 +477,6 @@ class Bimaru(Problem):
                     board.set_value(i,j,RIGHT)
                     board.put_water_vertical(i,j)
 
-
-                
-#CENTER = 'C'
-#UP = 'T'
-#DOWN = 'B'
-#LEFT = 'L'
-#RIGHT = 'R'
-#MID = 'M'
-#MID_HORIZONTAL = 'MH'
-#MID_VERTICAL = 'MV'
-#WATER = '~'
-#EMPTY = '.'
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
@@ -520,14 +506,14 @@ class Bimaru(Problem):
                 if(i == 0 and j == 6):
                   print("DEBUG" + str((state.board.columns[j].total - state.board.columns[j].boats) >= 3))
                 if (state.board.enough_space('Column', i, j, 3) and # There are enough spaces for a boat
-                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i+1,j,'Middle') and
                     state.board.boat_available(i+2,j,'End')):
                   actionList.append(Action(3, ((i,j),(i+1,j),(i+2,j)) ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,8):
                 if (state.board.enough_space('Row', i, j, 3) and # There are enough spaces for a boat
-                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'End')):
                   actionList.append(Action(3, ((i,j),(i,j+1),(i,j+2)) ))
@@ -542,10 +528,18 @@ class Bimaru(Problem):
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,9):
                 if (state.board.enough_space('Row', i, j, 2) and # There are enough spaces for a boat
-                    state.board.boat_available(i,j,'Begin') and # All position are available
+                    state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'End')):
                   actionList.append(Action(2, ((i,j),(i,j+1)) ))
         
+        # Try to find spots for 1-boat
+        for i in range(0,10): 
+            for j in range(0,10):
+                if (state.board.board_matrix[i][j] == EMPTY and #Empty
+                    not state.board.isBlockedBoat(i,j) and #Not blocked
+                    not state.board.rows[i].fullBoat() and #Row not full
+                    not state.board.columns[j].fullBoat()): #Column not full
+                  actionList.append(Action(1, ((i,j)) ))
         return actionList
     
     def result(self, state_original: BimaruState, action: Action):
