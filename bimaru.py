@@ -255,6 +255,17 @@ class Board:
                 else:
                     print(self.board_matrix[i][j], end='')
             print('')    
+
+    def print2(self):
+        print('   ', end='')
+        for i in range(0,10):
+            print(' ' + str(self.columns[i].total) + ' ', end='')
+        print('')
+        for i in range(0,10):
+            print(str(self.rows[i].total) + ' [',end='')
+            for j in range(0,10):
+                print(' ' + self.board_matrix[i][j] + ' ', end='')
+            print(']')
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
