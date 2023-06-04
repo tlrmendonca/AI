@@ -112,10 +112,8 @@ class Board:
     
     def set_value(self, row: int, col: int, type):
         if(type == WATER and self.board_matrix[row][col] == EMPTY):
-            print("added water")
             self.rows[row].addWater()
             self.columns[col].addWater()
-            print(self.columns[col].water)
             self.placed_waters += 1
         elif(self.is_boat(type) and self.board_matrix[row][col] == EMPTY):
             self.put_water_diagonal_values(row,col)
@@ -424,13 +422,13 @@ class Bimaru(Problem):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
         actionList = list()
-        for i in range(0,10):
-            if(state.board.rows[i].fullBoat() and not state.board.rows[i].fullWater()):
-                action = Action(FILL_ROW,WATER,i,0)
-                actionList.append(action)
-            if(state.board.columns[i].fullBoat() and not state.board.columns[i].fullWater()):
-                action = Action(FILL_COLUMN,WATER,i,0)
-                actionList.append(action)
+        #for i in range(0,10):
+        #    if(state.board.rows[i].fullBoat() and not state.board.rows[i].fullWater()):
+        #        action = Action(FILL_ROW,WATER,i,0)
+        #        actionList.append(action)
+        #    if(state.board.columns[i].fullBoat() and not state.board.columns[i].fullWater()):
+        #        action = Action(FILL_COLUMN,WATER,i,0)
+        #        actionList.append(action)
         for i in range(0,10):
             for j in range(0,10):
                 if ((state.board.board_matrix[i][j] == EMPTY) and not (state.board.rows[i].fullBoat()) and not (state.board.columns[j].fullBoat())):
@@ -485,7 +483,6 @@ class Bimaru(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        #print("Goal Test: "+ str(state.board.placed_waters + state.board.placed_boats))
         if(self.countEmpty(state.board)):
             return False
         return True
@@ -510,5 +507,6 @@ if __name__ == "__main__":
     bimaru.initial.board.print()
 
     goal_node = depth_first_tree_search(bimaru)
+    print("DFS FINISHED")
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print(), sep="")
