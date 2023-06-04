@@ -29,10 +29,10 @@ DOWN = 'B'
 LEFT = 'L'
 RIGHT = 'R'
 MID = 'M'
-MID_HORIZONTAL = 'MH'
-MID_VERTICAL = 'MV'
-WATER = '~'
-EMPTY = '.'
+MID_HORIZONTAL = 'H'
+MID_VERTICAL = 'V'
+WATER = '.'
+EMPTY = ' '
 
 FILL_ROW = 1
 FILL_COLUMN = 2
@@ -98,6 +98,7 @@ class Board:
     board_matrix = list() #board representation
     rows = list() #list of Line values
     columns = list() #list of Column values
+    hints = list()
 
     placed_boats : int = 0
     placed_waters : int = 0
@@ -247,16 +248,13 @@ class Board:
         return False
     
     def print(self):
-        print('   ', end='')
         for i in range(0,10):
-            print(' ' + str(self.columns[i].total) + ' ', end='')
-        print('')
-        for i in range(0,10):
-            print(str(self.rows[i].total) + ' [',end='')
             for j in range(0,10):
-                print(' ' + self.board_matrix[i][j] + ' ', end='')
-            print(']')
-    
+                if((i,j) not in self.hints):
+                    print(self.board_matrix[i][j].lower(), end='')
+                else:
+                    print(self.board_matrix[i][j], end='')
+            print('')    
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -291,6 +289,10 @@ class Board:
             x = int(hint[1])
             y = int(hint[2])
             tile_type = hint[3]
+
+            # Save as hint
+            board.hints.append((x,y))
+
             #W (water), C (circle), T (top), M (middle),B (bottom), L (left) e R (right).
             if tile_type == 'W':
                 real_type = WATER
