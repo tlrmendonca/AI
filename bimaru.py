@@ -128,7 +128,10 @@ class Board:
         self.board_matrix[row][col] = type
 
     def boat_available(self,row,col,type='Mid'):
-      '''Defines if position [row,col] is available for a boat'''
+      '''Defines if position [row,col] is available for a boat
+      Note: THIS FUNCTION SHOULD NOT BE USED OUTSIDE THE PROPER CONTEXT
+      Only available to check boat positioning where 'Begin' and 'End'
+      are set as the top and bottom or left and right peices of the boat'''
       # position needs to empty or any type of boat
       if(self.board_matrix[row][col] == WATER):
         return False
