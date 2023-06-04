@@ -132,6 +132,9 @@ class Board:
     def is_boat(self,tile):
         return tile != 'None' and tile != WATER and tile != EMPTY
 
+    def is_water(self,tile):
+        return tile == WATER
+
     def adjacent_vertical_values(self, row: int, col: int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
