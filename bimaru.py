@@ -481,12 +481,8 @@ class Bimaru(Problem):
                       if(self.result(state,action).board.verify_lines()):
                           actionList.append(action)
           if (len(actionList) < state.board.boats[0]): # 4-boat still available to position and list does't let us -> solution is not on this branch
-              for action in actionList[:5]:
-                  print(action.toString())
               return list()
           if(len(actionList) > 0):
-              for action in actionList[:5]:
-                  print(action.toString())
               return list(reversed(actionList))
 
         #Try to find spots for 3-boat
@@ -510,12 +506,8 @@ class Bimaru(Problem):
                       if(self.result(state, action).board.verify_lines()):
                           actionList.append(action)
           if (len(actionList) < state.board.boats[1]): # 3-boat still available to position and list is empty -> solution is not on this branch
-              for action in actionList[:5]:
-                  print(action.toString())
               return list()
           if(len(actionList) > 0):
-              for action in actionList[:5]:
-                  print(action.toString())
               return list(reversed(actionList))
 
         # Try to find spots for 2-boat
@@ -537,12 +529,8 @@ class Bimaru(Problem):
                       if(self.result(state, action).board.verify_lines()):
                           actionList.append(action)
           if (len(actionList) < state.board.boats[2]): # 2-boat still available to position and list is empty -> solution is not on this branch
-              for action in actionList[:5]:
-                  print(action.toString())
               return list()
           if(len(actionList) > 0):
-              for action in actionList[:5]:
-                  print(action.toString())
               return list(reversed(actionList))
         
         # Try to find spots for 1-boat
