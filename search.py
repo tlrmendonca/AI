@@ -206,12 +206,18 @@ def depth_first_tree_search(problem):
 
     frontier = [Node(problem.initial)]  # Stack
     i=0
+<<<<<<< HEAD
+    while frontier and i < 10:
+        node = frontier.pop()
+        i+=1
+=======
     limit = 10000
     while frontier and i < limit:
         node = frontier.pop()
         i+=1
         if(i == limit):
             return node
+>>>>>>> refs/remotes/origin/boat_approach
         node.state.board.print2()
         if problem.goal_test(node.state):
             return node

@@ -104,6 +104,7 @@ class Board:
     rows = list() #list of Line values
     columns = list() #list of Column values
     hints = list()
+    boats = [1,2,3,4]
 
     placed_boats : int = 0
     placed_waters : int = 0
@@ -518,9 +519,11 @@ class Bimaru(Problem):
         state.board.board_matrix = copy.deepcopy(state_original.board.board_matrix)
         state.board.rows = copy.deepcopy(state_original.board.rows)
         state.board.columns = copy.deepcopy(state_original.board.columns)
-        state.board.placed_boats = copy.deepcopy(state_original.board.placed_boats)
-        state.board.placed_waters = copy.deepcopy(state_original.board.placed_waters)
+        state.board.placed_boats : copy.deepcopy(state_original.board.placed_boats)
+        state.board.placed_waters : copy.deepcopy(state_original.board.placed_waters)
+        state.board.placed_boats : copy.deepcopy(state_original.board.placed_boats)
         if(action.boat_size == 4):
+            state.board.boats[0] -= 1
             if(action.orientation == VERTICAL):
                 x = action.coordinates[0][0]
                 y = action.coordinates[0][1]
@@ -560,6 +563,7 @@ class Bimaru(Problem):
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
         elif(action.boat_size == 3):
+            state.board.boats[1] -= 1
             if(action.orientation == VERTICAL):
                 x = action.coordinates[0][0]
                 y = action.coordinates[0][1]
@@ -591,6 +595,7 @@ class Bimaru(Problem):
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
         elif(action.boat_size == 2):
+            state.board.boats[2] -= 1
             if(action.orientation == VERTICAL):
                 x = action.coordinates[0][0]
                 y = action.coordinates[0][1]
@@ -614,6 +619,7 @@ class Bimaru(Problem):
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
         elif(action.boat_size == 1):
+            state.board.boats[3] -= 1
             x = action.coordinates[0]
             y = action.coordinates[1]
             state.board.set_value(x,y,CENTER)
@@ -654,6 +660,3 @@ if __name__ == "__main__":
     goal_node = depth_first_tree_search(bimaru)
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print2(), sep="")
-
-    for action in bimaru.actions(goal_node.state):
-        print(action.toString())
