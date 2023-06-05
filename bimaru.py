@@ -306,19 +306,13 @@ class Board:
             self.set_value(row,col+1,MID_HORIZONTAL)
 
     def isBlockedBoat(self,row,col):
-        vertical = self.adjacent_vertical_values(row,col)
-        horizontal = self.adjacent_horizontal_values(row,col)
-        diagonal = self.diagonal_values(row,col)
-
-        if(vertical[0] != UP and vertical[0] != WATER and vertical[0] != EMPTY and vertical[0] != 'None'):
-            return True
-        if(vertical[1] != DOWN and vertical[1] != WATER and vertical[1] != EMPTY and vertical[1] != 'None'):
-            return True
-        if(horizontal[0] != LEFT and horizontal[0] != WATER and horizontal[0] != EMPTY and horizontal[0] != 'None'):
-            return True
-        if(horizontal[1] != RIGHT and horizontal[1] != WATER and horizontal[1] != EMPTY and horizontal[1] != 'None'):
-            return True
-        for tile in diagonal:
+        for tile in self.adjacent_vertical_values(row,col):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
+                return True
+        for tile in self.adjacent_horizontal_values(row,col):
+            if(tile != WATER and tile != EMPTY and tile != 'None'):
+                return True
+        for tile in self.diagonal_values(row,col):
             if(tile != WATER and tile != EMPTY and tile != 'None'):
                 return True
         return False
