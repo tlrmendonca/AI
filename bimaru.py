@@ -104,6 +104,7 @@ class Board:
     rows = list() #list of Line values
     columns = list() #list of Column values
     hints = list()
+    boats = [1,2,3,4]
 
     placed_boats : int = 0
     placed_waters : int = 0
@@ -458,7 +459,8 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j+2,'Middle') and
                     state.board.boat_available(i,j+3,'End')):
                   actionList.append(Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)),HORIZONTAL ))
-
+        if (state.board.boats[0] != 0 and len(actionList) == 0):
+            return actionList #If there are no spots for 4-boat and we still have 4-boats to place, we will never find the solution in this branch
         #Try to find spots for 3-boat
         for i in range(0,8): #searching downwards orientation, starting at [i,j]
             for j in range(0,10):
@@ -474,6 +476,8 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'End')):
                   actionList.append(Action(3, ((i,j),(i,j+1),(i,j+2)), HORIZONTAL ))
+        if (state.board.boats[1] != 0 and len(actionList) == 0):
+            return actionList #If there are no spots for 3-boat and we still have 3-boats to place, we will never find the solution in this branch
 
         # Try to find spots for 2-boat
         for i in range(0,9): #searching downwards orientation, starting at [i,j]
@@ -488,7 +492,9 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'End')):
                   actionList.append(Action(2, ((i,j),(i,j+1)), HORIZONTAL ))
-        
+        if (state.board.boats[2] != 0 and len(actionList) == 0):
+            return actionList #If there are no spots for 2-boat and we still have 2-boats to place, we will never find the solution in this branch
+
         # Try to find spots for 1-boat
         for i in range(0,10): 
             for j in range(0,10):
@@ -512,7 +518,9 @@ class Bimaru(Problem):
         state.board.columns = copy.deepcopy(state_original.board.columns)
         state.board.placed_boats : copy.deepcopy(state_original.board.placed_boats)
         state.board.placed_waters : copy.deepcopy(state_original.board.placed_waters)
+        state.board.placed_boats : copy.deepcopy(state_original.board.placed_boats)
         if(action.boat_size == 4):
+            state.board.boats[0] -= 1
             if(action.orientation == VERTICAL):
                 x = action.coordinates[0][0]
                 y = action.coordinates[0][1]
@@ -552,6 +560,7 @@ class Bimaru(Problem):
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
         elif(action.boat_size == 3):
+            state.board.boats[1] -= 1
             if(action.orientation == VERTICAL):
                 x = action.coordinates[0][0]
                 y = action.coordinates[0][1]
@@ -583,6 +592,7 @@ class Bimaru(Problem):
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
         elif(action.boat_size == 2):
+            state.board.boats[2] -= 1
             if(action.orientation == VERTICAL):
                 x = action.coordinates[0][0]
                 y = action.coordinates[0][1]
@@ -606,6 +616,7 @@ class Bimaru(Problem):
                 state.board.put_water_right(x,y)
                 state.board.put_water_vertical(x,y)
         elif(action.boat_size == 1):
+            state.board.boats[3] -= 1
             x = action.coordinates[0]
             y = action.coordinates[1]
             state.board.set_value(x,y,CENTER)
@@ -646,6 +657,3 @@ if __name__ == "__main__":
     goal_node = depth_first_tree_search(bimaru)
     print("Is goal?", bimaru.goal_test(goal_node.state))
     print("Solution:\n", goal_node.state.board.print2(), sep="")
-
-    for action in bimaru.actions(goal_node.state):
-        print(action.toString())
