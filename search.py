@@ -100,7 +100,6 @@ class Node:
         """[Figure 3.10]"""
         next_state = problem.result(self.state, action)
         next_node = Node(next_state, self, action, problem.path_cost(self.path_cost, self.state, action, next_state))
-        
         return next_node
 
     def solution(self):
@@ -205,20 +204,9 @@ def depth_first_tree_search(problem):
     """
 
     frontier = [Node(problem.initial)]  # Stack
-    i=0
-<<<<<<< HEAD
-    while frontier and i < 10:
+
+    while frontier:
         node = frontier.pop()
-        i+=1
-=======
-    limit = 10000
-    while frontier and i < limit:
-        node = frontier.pop()
-        i+=1
-        if(i == limit):
-            return node
->>>>>>> refs/remotes/origin/boat_approach
-        node.state.board.print2()
         if problem.goal_test(node.state):
             return node
         frontier.extend(node.expand(problem))
@@ -241,6 +229,7 @@ def depth_first_graph_search(problem):
         node = frontier.pop()
         if problem.goal_test(node.state):
             return node
+        node.state.board.print2()
         explored.add(node.state)
         frontier.extend(child for child in node.expand(problem)
                         if child.state not in explored and child not in frontier)
