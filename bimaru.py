@@ -450,7 +450,9 @@ class Bimaru(Problem):
                     state.board.boat_available(i+1,j,'Middle') and
                     state.board.boat_available(i+2,j,'Middle') and
                     state.board.boat_available(i+3,j,'End')):
-                  actionList.append(Action(4, ((i,j),(i+1,j),(i+2,j),(i+3,j)),VERTICAL ))
+                    action = Action(4, ((i,j),(i+1,j),(i+2,j),(i+3,j)),VERTICAL)
+                    if(self.result(state,action).board.verify_lines()):
+                        actionList.append(action)
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,7):
                 if (state.board.enough_space('Row', i, j, 4) and # There are enough spaces for a boat
@@ -458,9 +460,10 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'Middle') and
                     state.board.boat_available(i,j+3,'End')):
-                  actionList.append(Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)),HORIZONTAL ))
-        if (state.board.boats[0] != 0 and len(actionList) == 0):
-            return actionList #If there are no spots for 4-boat and we still have 4-boats to place, we will never find the solution in this branch
+                    action = Action(4, ((i,j),(i,j+1),(i,j+2),(i,j+3)),HORIZONTAL)
+                    if(self.result(state,action).board.verify_lines()):
+                        actionList.append(action)
+
         #Try to find spots for 3-boat
         for i in range(0,8): #searching downwards orientation, starting at [i,j]
             for j in range(0,10):
@@ -468,16 +471,18 @@ class Bimaru(Problem):
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i+1,j,'Middle') and
                     state.board.boat_available(i+2,j,'End')):
-                  actionList.append(Action(3, ((i,j),(i+1,j),(i+2,j)),VERTICAL ))
+                    action = Action(3, ((i,j),(i+1,j),(i+2,j)),VERTICAL )
+                    if(self.result(state, action).board.verify_lines()):
+                        actionList.append(action)
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,8):
                 if (state.board.enough_space('Row', i, j, 3) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'Middle') and
                     state.board.boat_available(i,j+2,'End')):
-                  actionList.append(Action(3, ((i,j),(i,j+1),(i,j+2)), HORIZONTAL ))
-        if (state.board.boats[1] != 0 and len(actionList) == 0):
-            return actionList #If there are no spots for 3-boat and we still have 3-boats to place, we will never find the solution in this branch
+                    action = Action(3, ((i,j),(i,j+1),(i,j+2)), HORIZONTAL )
+                    if(self.result(state, action).board.verify_lines()):
+                        actionList.append(action)
 
         # Try to find spots for 2-boat
         for i in range(0,9): #searching downwards orientation, starting at [i,j]
@@ -485,16 +490,18 @@ class Bimaru(Problem):
                 if (state.board.enough_space('Column', i, j, 2) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All position are available
                     state.board.boat_available(i+1,j,'End')):
-                  actionList.append(Action(2, ((i,j),(i+1,j)), VERTICAL ))
+                    action = Action(2, ((i,j),(i+1,j)), VERTICAL )
+                    if(self.result(state, action).board.verify_lines()):
+                        actionList.append(Action(2, ((i,j),(i+1,j)), VERTICAL ))
         for i in range(0,10): #searching rightwards orientation, starting at [i,j]
             for j in range(0,9):
                 if (state.board.enough_space('Row', i, j, 2) and # There are enough spaces for a boat
                     state.board.boat_available(i,j,'Begin') and # All positions are available
                     state.board.boat_available(i,j+1,'End')):
-                  actionList.append(Action(2, ((i,j),(i,j+1)), HORIZONTAL ))
-        if (state.board.boats[2] != 0 and len(actionList) == 0):
-            return actionList #If there are no spots for 2-boat and we still have 2-boats to place, we will never find the solution in this branch
-
+                    action = Action(2, ((i,j),(i,j+1)), HORIZONTAL )
+                    if(self.result(state, action).board.verify_lines()):
+                        actionList.append(action)
+        
         # Try to find spots for 1-boat
         for i in range(0,10): 
             for j in range(0,10):
@@ -502,7 +509,9 @@ class Bimaru(Problem):
                     not state.board.isBlockedBoat(i,j) and #Not blocked
                     not state.board.rows[i].fullBoat() and #Row not full
                     not state.board.columns[j].fullBoat()): #Column not full
-                  actionList.append(Action(1, (i,j), VERTICAL))
+                  action = Action(1, (i,j), VERTICAL)
+                  if(self.result(state, action).board.verify_lines()):
+                    actionList.append(Action(1, (i,j), VERTICAL))
         return list(reversed(actionList))
     
     def result(self, state_original: BimaruState, action: Action):
